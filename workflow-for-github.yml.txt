@@ -1,0 +1,31 @@
+name: Build Windows VST3
+
+# Cloud build: no Visual Studio needed on your PC.
+# GitHub -> Actions -> "Build Windows VST3" -> Run workflow, then download the artifact.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -A x64
+
+      - name: Build VST3 (Release)
+        run: cmake --build build --config Release --target NorthstarMastering_VST3 --parallel
+
+      - name: Stage bundle
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force stage | Out-Null
+          Copy-Item -Recurse "build/NorthstarMastering_artefacts/Release/VST3/Northstar Master.vst3" stage/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Northstar-Master-VST3-Windows-x64
+          path: stage
